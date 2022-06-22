@@ -1,8 +1,13 @@
 package com.thehecklers.cosmosdbsql;
 
 import com.azure.spring.data.cosmos.core.mapping.Container;
+import com.azure.spring.data.cosmos.core.mapping.GeneratedValue;
 import com.azure.spring.data.cosmos.core.mapping.PartitionKey;
 import com.azure.spring.data.cosmos.repository.ReactiveCosmosRepository;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.data.annotation.Id;
@@ -33,8 +38,8 @@ class DataLoader {
 	@PostConstruct
 	void loadData() {
 		repo.deleteAll()
-				.thenMany(Flux.just(new User("1", "Alpha", "Bravo", "123 N 4th St"),
-						new User("2", "Charlie", "Delta", "1313 Mockingbird Ln")))
+				.thenMany(Flux.just(new User("Alpha", "Bravo", "123 N 4567th St"),
+						new User("Charlie", "Delta", "1313 Mockingbird Lane")))
 				.flatMap(repo::save)
 				.thenMany(repo.findAll())
 				.subscribe(System.out::println);
@@ -55,7 +60,22 @@ class CosmosSqlController {
 	}
 }
 
-interface UserRepository extends ReactiveCosmosRepository<User, String> {}
+interface UserRepository extends ReactiveCosmosRepository<User, Long> {}
+
+//@Container(containerName = "data")
+//record User(@Id Long id, String firstName, @PartitionKey String lastName, String address) {}
 
 @Container(containerName = "data")
-record User(@Id String id, String firstName, @PartitionKey String lastName, String address) {}
+@Data
+@NoArgsConstructor
+@RequiredArgsConstructor
+class User {
+	@Id
+	@GeneratedValue
+	private String id;
+	@NonNull
+	@PartitionKey
+	private String firstName;
+	@NonNull
+	private String lastName, address;
+}
