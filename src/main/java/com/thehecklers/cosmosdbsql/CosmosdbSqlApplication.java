@@ -53,18 +53,9 @@ class CosmosSqlController {
 	Flux<User> getAllUsers() {
 		return repo.findAll();
 	}
-
-	@GetMapping("/findbylastname")
-	Flux<User> getUsersWithLastName(@RequestParam String name) {
-		System.out.println("Name: " + name);
-		return repo.findByLastName(name);
-	}
 }
 
 interface UserRepository extends ReactiveCosmosRepository<User, String> {
-//	@Query("select u from User u where u.lastname = :name")
-	@Query("select * from Users where u.lastname like ?1")
-	Flux<User> findByLastName(String name);
 }
 
 @Container(containerName = "data")
