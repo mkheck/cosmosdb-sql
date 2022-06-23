@@ -3,6 +3,7 @@ package com.thehecklers.cosmosdbsql;
 import com.azure.spring.data.cosmos.core.mapping.Container;
 import com.azure.spring.data.cosmos.core.mapping.GeneratedValue;
 import com.azure.spring.data.cosmos.core.mapping.PartitionKey;
+import com.azure.spring.data.cosmos.repository.Query;
 import com.azure.spring.data.cosmos.repository.ReactiveCosmosRepository;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
@@ -11,6 +12,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.data.annotation.Id;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Flux;
 
@@ -51,9 +53,19 @@ class CosmosSqlController {
 	Flux<User> getAllUsers() {
 		return repo.findAll();
 	}
+
+	@GetMapping("/findbylastname")
+	Flux<User> getUsersWithLastName(@RequestParam String name) {
+		System.out.println("Name: " + name);
+		return repo.findByLastName(name);
+	}
 }
 
-interface UserRepository extends ReactiveCosmosRepository<User, Long> {}
+interface UserRepository extends ReactiveCosmosRepository<User, String> {
+//	@Query("select u from User u where u.lastname = :name")
+	@Query("select * from Users where u.lastname like ?1")
+	Flux<User> findByLastName(String name);
+}
 
 @Container(containerName = "data")
 @Data
@@ -62,7 +74,7 @@ interface UserRepository extends ReactiveCosmosRepository<User, Long> {}
 class User {
 	@Id
 	@GeneratedValue
-	private Long id;
+	private String id;
 	@NonNull
 	private String firstName;
 	@NonNull
