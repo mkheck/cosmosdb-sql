@@ -4,10 +4,8 @@ import com.azure.spring.data.cosmos.core.mapping.Container;
 import com.azure.spring.data.cosmos.core.mapping.GeneratedValue;
 import com.azure.spring.data.cosmos.core.mapping.PartitionKey;
 import com.azure.spring.data.cosmos.repository.ReactiveCosmosRepository;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
+import lombok.*;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.data.annotation.Id;
@@ -27,13 +25,11 @@ public class CosmosdbSqlApplication {
 
 }
 
+@Slf4j
 @Component
+@AllArgsConstructor
 class DataLoader {
 	private final UserRepository repo;
-
-	DataLoader(UserRepository repo) {
-		this.repo = repo;
-	}
 
 	@PostConstruct
 	void loadData() {
@@ -42,17 +38,14 @@ class DataLoader {
 						new User("Charlie", "Delta", "1313 Mockingbird Lane")))
 				.flatMap(repo::save)
 				.thenMany(repo.findAll())
-				.subscribe(System.out::println);
+				.subscribe(user -> log.info(user.toString()));
 	}
 }
 
 @RestController
+@AllArgsConstructor
 class CosmosSqlController {
 	private final UserRepository repo;
-
-	CosmosSqlController(UserRepository repo) {
-		this.repo = repo;
-	}
 
 	@GetMapping
 	Flux<User> getAllUsers() {
@@ -62,9 +55,6 @@ class CosmosSqlController {
 
 interface UserRepository extends ReactiveCosmosRepository<User, Long> {}
 
-//@Container(containerName = "data")
-//record User(@Id Long id, String firstName, @PartitionKey String lastName, String address) {}
-
 @Container(containerName = "data")
 @Data
 @NoArgsConstructor
@@ -72,10 +62,12 @@ interface UserRepository extends ReactiveCosmosRepository<User, Long> {}
 class User {
 	@Id
 	@GeneratedValue
-	private String id;
+	private Long id;
 	@NonNull
-	@PartitionKey
 	private String firstName;
 	@NonNull
-	private String lastName, address;
+	@PartitionKey
+	private String lastName;
+	@NonNull
+	private String address;
 }
